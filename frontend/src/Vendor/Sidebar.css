@@ -1,0 +1,50 @@
+/* Clean and modern sidebar appearance */
+.sidebar {
+  background-color: #ffffff;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 14px;
+  color: #333;
+  width: 270px;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid #eee;
+  padding: 1rem;
+}
+
+/* Section titles */
+.sidebar h5,
+.sidebar h6 {
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 0.75rem;
+}
+
+/* Checkbox list spacing */
+.form-check {
+  margin-bottom: 0.4rem;
+}
+
+/* View More button */
+.btn-link {
+  color: #007bff;
+  text-decoration: none;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}

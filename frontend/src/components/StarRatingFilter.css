@@ -1,0 +1,127 @@
+/* StarRating.css */
+.star-rating-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star-rating-button {
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-rating-button:hover {
+  background-color: #f3f4f6;
+}
+
+.star-rating-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Star Icon */
+.star-icon {
+  width: 16px;
+  height: 16px;
+  transition: all 0.2s ease;
+}
+
+.star-icon.filled {
+  fill: #000;
+  color: #000;
+}
+
+.star-icon.empty {
+  fill: none;
+  color: #d1d5db;
+}
+
+.star-icon.hover {
+  color: #6b7280;
+}
+
+/* Rating Text */
+.rating-text {
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 8px;
+  font-weight: 400;
+}
+
+/* Interactive States */
+.star-rating-container:hover .star-icon.empty {
+  color: #9ca3af;
+}
+
+/* Selected Rating Display */
+.selected-rating {
+  font-size: 12px;
+  color: #000;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+/* Animation for star filling */
+@keyframes starFill {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.star-icon.just-selected {
+  animation: starFill 0.3s ease;
+}
+
+/* Rating Labels */
+.rating-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rating-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.rating-option:hover {
+  background-color: #f9fafb;
+}
+
+.rating-option.selected {
+  background-color: #f3f4f6;
+}
+
+.rating-option-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.rating-option-text {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.rating-option.selected .rating-option-text {
+  color: #000;
+  font-weight: 500;
+}

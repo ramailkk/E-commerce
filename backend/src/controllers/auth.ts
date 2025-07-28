@@ -23,13 +23,15 @@ const signup = tryCatch(async (req: Request, res: Response): Promise<any> => {
       role, // optional, only needed if role isn't 'user' by default
     });
   } else {
-    const { shopName } = req.body;
+    const { shopName, location } = req.body;
     user = await Vendor.create({
       fullName,
       email,
       password,
       role,
-      shopName
+      shopName,
+      location
+
     });
   }
 

@@ -14,6 +14,8 @@ import { errorHandler } from "./utils/middlewares/error";
 import { AppError } from "./utils/appError";
 import corsOptions from "./config/cors";
 
+
+
 const app = express();
 
 const env = process.env.NODE_ENV || "development";
@@ -25,6 +27,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static("public"));
 app.use(helmet());
+
 
 // SSL
 var httpsServer;

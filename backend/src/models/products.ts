@@ -36,11 +36,23 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
-    // images: {
-    //   type: [String], // or Object with metadata if you store more
-    //   validate: [arrayLimit, "Product must have 4 to 5 images"],
-    //   required: false,
-    // },
+    profile: {
+      type: String, // Single thumbnail or main image
+      required: false,
+      default: '',
+    },
+
+    images: {
+      type: [String], // e.g. ["img1.jpg", "img2.jpg"]
+      validate: {
+        validator: function (val: string[]) {
+          return val.length >= 4 && val.length <= 5;
+        },
+        message: "Product must have between 4 to 5 images",
+      },
+      default: [],
+      required: false,
+    },
   },
   { timestamps: true },
 );
@@ -50,39 +62,27 @@ function arrayLimit(val: any) {
   return val.length >= 4 && val.length <= 5;
 }
 
-// Optional: hook to delete images from storage when product is deleted
-// productSchema.pre(
-//   "deleteOne",
-//   { document: true, query: false },
-//   async function () {
-//     const product = this;
-//     TODO: Add logic to delete images from cloud storage (e.g. S3, Cloudinary)
-//     console.log("Deleting product images:", product.images);
-//   },
-// );
 
-const categorySchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      minlength: 2,
-    },
-
-    description: {
-      type: String,
-      maxlength: 500,
-    },
-
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
-    },
+const categorySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    minlength: 2,
   },
-);
+
+  description: {
+    type: String,
+    maxlength: 500,
+  },
+
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active",
+  },
+});
 
 productSchema.plugin(mongoosePaginate);
 productSchema.plugin(mongooseAggregatePaginate);

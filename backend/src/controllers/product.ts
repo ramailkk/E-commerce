@@ -6,9 +6,6 @@ import { User } from "../models/user";
 import { Vendor } from "../models/vendor";
 import moment from "moment";
 
-
-
-
 const getAllVendorProducts = tryCatch(
   async (req: any, res: Response): Promise<any> => {
     if (req.user?.role !== "vendor") {
@@ -33,136 +30,351 @@ const getAllVendorProducts = tryCatch(
   },
 );
 
+const getProducts = tryCatch(async (req: any, res: Response): Promise<any> => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const { keyword, from, to, lat, lng, radius } = req.query;
 
-const getProducts =tryCatch(
-  async (req: any, res: Response): Promise<any> => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const { keyword, from, to, lat, lng, radius } = req.query;
+  const finalAggregate: any[] = [];
 
-    const finalAggregate: any[] = [];
-
-    // Join with vendor to get location
+  // 1. GeoNear must be first
+  if (lat && lng && radius) {
     finalAggregate.push({
-      $lookup: {
-        from: "vendors",
-        localField: "vendor", // assuming Product has `vendor: ObjectId`
-        foreignField: "_id",
-        as: "vendor",
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: [parseFloat(lng as string), parseFloat(lat as string)],
+        },
+        distanceField: "distance", // adds a 'distance' field in meters
+        maxDistance: parseFloat(radius as string) * 1000, // Convert km to meters
+        spherical: true,
       },
     });
+  }
 
-    // Flatten the vendor array
-    finalAggregate.push({ $unwind: "$vendor" });
+  finalAggregate.push({
+    $lookup: {
+      from: "products",
+      localField: "_id", // vendor's _id
+      foreignField: "vendor", // product's vendor reference
+      as: "products",
+    },
+  });
 
-    // Location filter via vendor's geo location
-    if (lat && lng && radius) {
-      finalAggregate.push({
-        $geoNear: {
-          near: {
-            type: "Point",
-            coordinates: [parseFloat(lng as string), parseFloat(lat as string)],
+  finalAggregate.push({
+    $addFields: {
+      products: {
+        $filter: {
+          input: "$products",
+          as: "product",
+          cond: {
+            $and: [
+              // Date filter
+              ...(from
+                ? [
+                    {
+                      $gte: [
+                        "$$product.createdAt",
+                        new Date(
+                          moment
+                            .utc(from as string)
+                            .startOf("day")
+                            .toISOString(),
+                        ),
+                      ],
+                    },
+                  ]
+                : []),
+              ...(to
+                ? [
+                    {
+                      $lte: [
+                        "$$product.createdAt",
+                        new Date(
+                          moment
+                            .utc(to as string)
+                            .endOf("day")
+                            .toISOString(),
+                        ),
+                      ],
+                    },
+                  ]
+                : []),
+              // Keyword match
+              ...(keyword
+                ? [
+                    {
+                      $regexMatch: {
+                        input: { $toLower: "$$product.name" },
+                        regex: keyword.toLowerCase(),
+                      },
+                    },
+                  ]
+                : []),
+            ],
           },
-          distanceField: "vendor.distance",
-          maxDistance: parseFloat(radius as string) * 1000,
-          spherical: true,
-          key: "vendor.location", // assumes Vendor has `location: { type: Point, coordinates: [] }`
         },
-      });
-    }
+      },
+    },
+  });
 
-    // Date filtering
-    if (from) {
-      const utcFrom = moment
-        .utc(from as string, "YYYY-MM-DD")
-        .startOf("day")
-        .toDate();
-      finalAggregate.push({ $match: { createdAt: { $gte: utcFrom } } });
-    }
+  finalAggregate.push({
+    $project: {
+      _id: 1,
+      fullName: 1,
+      status: 1,
+      shopName: 1,
+      location: 1,
+      distance: 1,
+      products: 1, // this is an array now
+    },
+  });
 
-    if (to) {
-      const utcTo = moment
-        .utc(to as string, "YYYY-MM-DD")
-        .endOf("day")
-        .toDate();
-      finalAggregate.push({ $match: { createdAt: { $lte: utcTo } } });
-    }
+  // 6. Paginate
+  const myAggregate = Vendor.aggregate(finalAggregate);
+  const vendors = await (Vendor as any).aggregatePaginate(myAggregate, {
+    page,
+    limit,
+  });
 
-    // Keyword search (product name or vendor name)
-    if (keyword) {
-      const regex = new RegExp((keyword as string).toLowerCase(), "i");
-      finalAggregate.push({
-        $match: {
-          $or: [
-            { name: { $regex: regex } },
-            { "vendor.fullName": { $regex: regex } },
-          ],
-        },
-      });
-    }
+  res.status(200).json({
+    success: true,
+    message: `${vendors.docs.length} vendors found`,
+    data: vendors,
+  });
+});
 
-    // Sort by newest products
-    finalAggregate.push({ $sort: { createdAt: -1 } });
+const addProduct = tryCatch(async (req: any, res: Response): Promise<any> => {
+  const { name, description, price, categoryid } = req.body;
+  const vendorId = req.user?._id;
+  console.log(price);
+  // Multer stores file data in req.files
 
-    // Aggregate with pagination
-    const myAggregate = Product.aggregate(finalAggregate);
-    const products = await (Product as any).aggregatePaginate(myAggregate, {
-      page,
-      limit,
+  const images =
+    req.files?.images?.map((file: Express.Multer.File) => file.filename) || [];
+
+  const profile = req.files?.profile?.[0]?.filename || null;
+  console.log(images);
+  if (images.length < 4 || images.length > 5) {
+    return res.status(400).json({
+      message: "Please upload between 4 to 5 product images",
     });
+  }
 
-    res.status(200).json({
-      success: true,
-      message: `${products.docs.length} products found`,
-      data: products,
+  const product = await Product.create({
+    name,
+    description,
+    price,
+    vendor: vendorId,
+    category: categoryid,
+    images,
+    profile,
+  });
+
+  if (!product) {
+    return res.status(501).json({
+      message: "Product was not created",
     });
-  } );
+  }
 
-const CreateVendorProduct = tryCatch(
-  async (req: any, res: Response): Promise<any> => {
-    if (req.user?.role !== "vendor") {
-      return res.status(401).json({
-        message: "Not Authorized",
-      });
-    }
+  res.status(200).json({
+    message: "Product created successfully",
+    product,
+  });
+});
 
-    const { name, description, price, category_id } = req.body;
-    const vendorId = req.user?._id;
-
-    const createProduct = await Product.create({
-      name: name,
-      description: description,
-      price: price,
-      vendor: vendorId,
-      category: category_id,
-    });
-
-    if (!createProduct) {
-      return res.status(501).json({
-        message: "No product created",
-      });
-    }
-
-    res.status(200).json({
-      message: "Product created successfully ",
-      createProduct,
-    });
-  },
-);
 const GetAllCategories = tryCatch(
   async (req: any, res: Response): Promise<any> => {
-    const allCategories = await Category.find();
+    const Categories = await Category.find();
 
-    if (!allCategories || allCategories.length === 0) {
+    if (!Categories || Categories.length === 0) {
       return res.status(404).json({
         message: "No categories found",
       });
     }
     res.status(200).json({
       message: "Categories found successfully ",
-      allCategories,
+      Categories,
     });
   },
 );
 
-export { CreateVendorProduct, GetAllCategories, getAllVendorProducts };
+const getProduct = tryCatch(async (req: any, res: Response): Promise<any> => {
+  const { productId } = req.params;
+
+  if (!productId) {
+    return res.status(400).json({
+      message: "Product ID is required",
+    });
+  }
+
+  const product = await Product.findById({ _id: productId });
+
+  if (!product) {
+    return res.status(404).json({
+      message: "Product Not Found",
+    });
+  }
+
+  res.status(200).json({
+    message: "Product Found Successfully",
+    product,
+  });
+});
+
+import fs from "fs";
+import path from "path";
+
+const deleteProduct = tryCatch(
+  async (req: any, res: Response): Promise<any> => {
+    const { productId } = req.params;
+
+    const vendorId = req.user?.id;
+
+    if (!productId) {
+      return res.status(400).json({ message: "Product ID is required" });
+    }
+
+    const product = await Product.findById({
+      _id: productId,
+      vendor: vendorId,
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product Not Found" });
+    }
+
+    // Delete images from filesystem
+    const deleteFile = (filename: string) => {
+      const filePath = path.join(path.resolve("uploads"), filename);
+      fs.unlink(filePath, (err) => {
+        if (err && err.code !== "ENOENT") {
+          console.error("Failed to delete file:", filename, err);
+        }
+      });
+    };
+
+    if (product.profile) deleteFile(product.profile);
+
+    if (product.images && Array.isArray(product.images)) {
+      product.images.forEach((img: any) => deleteFile(img));
+    }
+
+    // Delete product from DB
+    await product.deleteOne();
+
+    res.status(200).json({
+      message: "Product Deleted Successfully",
+      product,
+    });
+  },
+);
+
+const updateProductImages = tryCatch(
+  async (req: any, res: Response): Promise<any> => {
+    const { productId } = req.params;
+    const { imagesToDelete = [] } = req.body;
+
+    if (!productId || imagesToDelete.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Product ID and Images to delete is required" });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Step 1: Delete requested images
+    product.images = product.images.filter((img: string) => {
+      if (imagesToDelete.includes(img)) {
+        const imgPath = path.join(__dirname, "../uploads", img);
+        fs.unlink(imgPath, (err) => {
+          if (err && err.code !== "ENOENT") {
+            console.error("Failed to delete image file:", img);
+          }
+        });
+        return false; // remove from DB array
+      }
+      return true;
+    });
+
+    // Step 2: Add new images from req.files
+    const newImages =
+      req.files?.images?.map((file: Express.Multer.File) => file.filename) ||
+      [];
+
+    if (newImages.length !== imagesToDelete.length || newImages.length === 0) {
+      return res.status(400).json({
+        message:
+          "New Images are required to be the same number as ones to delete",
+      });
+    }
+    product.images.push(...newImages);
+    // Step 3: Validate image count (between 4–5)
+    if (product.images.length < 4 || product.images.length > 5) {
+      return res.status(400).json({
+        message: "Product must have between 4 to 5 images after update",
+        currentCount: product.images.length,
+      });
+    }
+    await product.save();
+    res.status(200).json({
+      message: "Product images updated successfully",
+      images: product.images,
+    });
+  },
+);
+
+const updateProduct = tryCatch(
+  async (req: any, res: Response): Promise<any> => {
+    const { name, description, price, categoryid } = req.body;
+    const vendorId = req.user?._id;
+    console.log(price);
+    // Multer stores file data in req.files
+
+    const images =
+      req.files?.images?.map((file: Express.Multer.File) => file.filename) ||
+      [];
+
+    const profile = req.files?.profile?.[0]?.filename || null;
+    console.log(images);
+    if (images.length < 4 || images.length > 5) {
+      return res.status(400).json({
+        message: "Please upload between 4 to 5 product images",
+      });
+    }
+
+    const product = await Product.create({
+      name,
+      description,
+      price,
+      vendor: vendorId,
+      category: categoryid,
+      images,
+      profile,
+    });
+
+    if (!product) {
+      return res.status(501).json({
+        message: "Product was not created",
+      });
+    }
+
+    res.status(200).json({
+      message: "Product created successfully",
+      product,
+    });
+  },
+);
+
+export {
+  addProduct,
+  getProduct,
+  GetAllCategories,
+  getAllVendorProducts,
+  getProducts,
+  deleteProduct,
+  updateProductImages,
+};

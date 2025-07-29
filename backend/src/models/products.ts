@@ -26,7 +26,7 @@ const productSchema = new mongoose.Schema(
 
     vendor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // because vendors are users
+      ref: "Vendor", // because vendors are users
       required: true,
     },
 

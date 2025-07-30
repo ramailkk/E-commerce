@@ -47,14 +47,11 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-
     deliveredAt: Date,
     confirmedAt: Date,
     cancelledAt: Date,
-
-    
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Order = mongoose.model("Order", orderSchema);

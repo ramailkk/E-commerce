@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
 
 export const upload = multer({
   storage,
-  limits: { files: 5 }, // max 5 images
+  limits: { files: 5 }, // max 5 images,
 }).fields([
   { name: "images", maxCount: 5 },
   { name: "profile", maxCount: 1 },

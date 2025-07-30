@@ -1,19 +1,16 @@
 import mongoose from "mongoose";
 import { Product, Category } from "../models/products";
 import { tryCatch } from "../utils/tryCatch";
+import { isValidObjectId } from "../utils/validator";
 import { Response } from "express";
 import { User } from "../models/user";
 import { Vendor } from "../models/vendor";
 import moment from "moment";
+import fs from "fs";
+import path from "path";
 
 const getAllVendorProducts = tryCatch(
   async (req: any, res: Response): Promise<any> => {
-    if (req.user?.role !== "vendor") {
-      return res.status(401).json({
-        message: "Not Authorized",
-      });
-    }
-
     const vendorId = req.user?._id;
     const allProducts = await Product.find({ vendor: vendorId });
 
@@ -202,6 +199,7 @@ const GetAllCategories = tryCatch(
 const getProduct = tryCatch(async (req: any, res: Response): Promise<any> => {
   const { productId } = req.params;
 
+
   if (!productId) {
     return res.status(400).json({
       message: "Product ID is required",
@@ -221,9 +219,6 @@ const getProduct = tryCatch(async (req: any, res: Response): Promise<any> => {
     product,
   });
 });
-
-import fs from "fs";
-import path from "path";
 
 const deleteProduct = tryCatch(
   async (req: any, res: Response): Promise<any> => {
@@ -270,104 +265,136 @@ const deleteProduct = tryCatch(
   },
 );
 
-const updateProductImages = tryCatch(
-  async (req: any, res: Response): Promise<any> => {
-    const { productId } = req.params;
-    const { imagesToDelete = [] } = req.body;
-
-    if (!productId || imagesToDelete.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Product ID and Images to delete is required" });
+const deleteFiles = (filenames: string[]) => {
+  for (const file of filenames) {
+    const filePath = path.join(path.resolve("uploads"), file); // adjust path if needed
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
-
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    // Step 1: Delete requested images
-    product.images = product.images.filter((img: string) => {
-      if (imagesToDelete.includes(img)) {
-        const imgPath = path.join(__dirname, "../uploads", img);
-        fs.unlink(imgPath, (err) => {
-          if (err && err.code !== "ENOENT") {
-            console.error("Failed to delete image file:", img);
-          }
-        });
-        return false; // remove from DB array
-      }
-      return true;
-    });
-
-    // Step 2: Add new images from req.files
-    const newImages =
-      req.files?.images?.map((file: Express.Multer.File) => file.filename) ||
-      [];
-
-    if (newImages.length !== imagesToDelete.length || newImages.length === 0) {
-      return res.status(400).json({
-        message:
-          "New Images are required to be the same number as ones to delete",
-      });
-    }
-    product.images.push(...newImages);
-    // Step 3: Validate image count (between 4–5)
-    if (product.images.length < 4 || product.images.length > 5) {
-      return res.status(400).json({
-        message: "Product must have between 4 to 5 images after update",
-        currentCount: product.images.length,
-      });
-    }
-    await product.save();
-    res.status(200).json({
-      message: "Product images updated successfully",
-      images: product.images,
-    });
-  },
-);
+  }
+};
 
 const updateProduct = tryCatch(
   async (req: any, res: Response): Promise<any> => {
-    const { name, description, price, categoryid } = req.body;
+    const { productId } = req.params;
+    const { name, description, price, categoryid} = req.body;
+    const profile = req.files?.profile?.[0]?.filename;
+    const images = req.files?.images?.map((f: any) => f.filename);
     const vendorId = req.user?._id;
-    console.log(price);
-    // Multer stores file data in req.files
 
-    const images =
-      req.files?.images?.map((file: Express.Multer.File) => file.filename) ||
-      [];
-
-    const profile = req.files?.profile?.[0]?.filename || null;
-    console.log(images);
-    if (images.length < 4 || images.length > 5) {
-      return res.status(400).json({
-        message: "Please upload between 4 to 5 product images",
-      });
+    if (!isValidObjectId(productId)) {
+      if (images) deleteFiles(images);
+      if (profile) deleteFiles([profile]);
+      return res.status(400).json({ message: "Invalid Product ID" });
     }
 
-    const product = await Product.create({
-      name,
-      description,
-      price,
-      vendor: vendorId,
-      category: categoryid,
-      images,
-      profile,
-    });
-
+    const product = await Product.findById({_id: productId, vendor: vendorId});
     if (!product) {
-      return res.status(501).json({
-        message: "Product was not created",
-      });
+      if (images) deleteFiles(images);
+      if (profile) deleteFiles([profile]);
+      return res.status(404).json({ message: "Product not found" });
     }
+    // Only update if the value is not undefined
+
+    product.name = name ?? product.name;
+    product.description = description ?? product.description;
+    product.price = price ?? product.price;
+    product.category = categoryid ?? product.category;
+
+    // Change Profile Picture
+    if (profile) {
+      // Delete old image if it exists
+      if (product.profile) {
+        const oldImagePath = path.join(
+          path.resolve("uploads"),
+          product.profile,
+        );
+        fs.unlink(oldImagePath, (err) => {
+          if (err && err.code !== "ENOENT") {
+            console.error(
+              "Failed to delete old profile picture:",
+              product.profile,
+            );
+          }
+        });
+      }
+      product.profile = profile;
+    }
+
+    if (images) {
+      console.log(images)
+      let imagesToDelete: string[] = [];
+      if (req.body.imagesToDelete) {
+        try {
+          imagesToDelete = JSON.parse(req.body.imagesToDelete);
+        } catch (error) {
+          if (images) deleteFiles(images);
+          if (profile) deleteFiles([profile]);
+          return res
+            .status(400)
+            .json({ message: "Invalid imagesToDelete format" });
+        }
+      }
+      if (imagesToDelete.length === 0) {
+        if (images) deleteFiles(images);
+        if (profile) deleteFiles([profile]);
+        return res.status(400).json({
+          message: "Images to delete is required",
+        });
+      }
+      if (images.length !== imagesToDelete.length || images.length === 0) {
+        if (images) deleteFiles(images);
+        if (profile) deleteFiles([profile]);
+        return res.status(400).json({
+          message:
+            "New Images are required to be the same number as ones to delete",
+        });
+      }
+      const allImagesExist = imagesToDelete.every((img) =>
+        product.images.includes(img),
+      );
+      if (!allImagesExist) {
+        if (images) deleteFiles(images);
+        if (profile) deleteFiles([profile]);
+        return res.status(400).json({
+          message:
+            "One or more images to delete are not part of the product's images",
+        });
+      }
+      const finalImageCount =
+        product.images.length - imagesToDelete.length + images.length;
+      if (finalImageCount < 4 || finalImageCount > 5) {
+        if (images) deleteFiles(images);
+        if (profile) deleteFiles([profile]);
+        return res.status(400).json({
+          message: `Final image count must be between 4 and 5. Resulting count: ${finalImageCount}`,
+        });
+      }
+      // Finally: delete from DB & disk
+      product.images = product.images.filter((img: string) => {
+        if (imagesToDelete.includes(img)) {
+          const imgPath = path.join(path.resolve("uploads"), img);
+          fs.unlink(imgPath, (err) => {
+            if (err && err.code !== "ENOENT") {
+              console.error("Failed to delete image file:", img);
+            }
+          });
+          return false;
+        }
+        return true;
+      });
+
+      product.images.push(...images);
+    }
+    await product.save();
 
     res.status(200).json({
-      message: "Product created successfully",
+      message: "Product updated successfully",
       product,
     });
   },
 );
+
 
 export {
   addProduct,
@@ -376,5 +403,5 @@ export {
   getAllVendorProducts,
   getProducts,
   deleteProduct,
-  updateProductImages,
+  updateProduct
 };

@@ -8,7 +8,7 @@ import {
   getProduct,
   getProducts,
   deleteProduct,
-  updateProductImages
+  updateProduct
 }
   from "../controllers/product";
 import { isAdmin } from "../middlewares/isAdmin.middleware";
@@ -24,7 +24,7 @@ productRouter.route("/get-products-vendor").get(verifyJWT, getAllVendorProducts)
 productRouter.route("/products").get(getProducts);
 productRouter.route("/product/:productId").get(getProduct);
 productRouter.route("/delete/:productId").delete(verifyJWT, isVendor, deleteProduct)
-productRouter.route("/update/:productId").patch(verifyJWT, isVendor, upload, updateProductImages);
+productRouter.route("/update/:productId").patch(verifyJWT, isVendor, upload, updateProduct);
 
 
 export default productRouter;

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const mongoosePaginate = require("mongoose-paginate");
 const aggregatePaginate = require("mongoose-aggregate-paginate-v2");
 const Schema = mongoose.Schema;
+
 const paymentSchema = new Schema(
   {
     user: {
@@ -21,10 +22,15 @@ const paymentSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    chargeId: {
+      type: String,
+      required: false, // You can make it required: true if needed
+    },
   },
   { timestamps: true },
 );
 
 paymentSchema.plugin(mongoosePaginate);
 paymentSchema.plugin(aggregatePaginate);
-module.exports = mongoose.model("Payment", paymentSchema);
+
+export const Payment = mongoose.model("Payment", paymentSchema);

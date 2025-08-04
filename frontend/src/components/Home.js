@@ -38,7 +38,6 @@ function Home() {
         const res = await axiosInstance.get("profile/my-profile");
         console.log("Vendor Data:", res.data.user); // Log to debug
         setVendor(res.data.user);
-        
       } catch (error) {
         console.error("Error fetching vendor profile:", error);
       }
@@ -57,28 +56,27 @@ function Home() {
           Welcome <span className="text-primary">{vendor.fullName}</span>
         </h1>
 
-        <div
-          className="d-grid gap-4"
-          style={{
-            gridTemplateColumns: "repeat(2, 1fr)",
-            width: "600px",
-            margin: "0 auto",
-          }}
-        >
-          {options.map((item, index) => (
-            <div
-              key={index}
-              className="card shadow-sm p-4"
-              style={{ cursor: "pointer", transition: "0.3s" }}
-              onClick={() => alert(`Clicked: ${item.label}`)}
-            >
-              <div className="d-flex flex-column justify-content-center align-items-center text-center">
-                {item.icon}
-                <h5 className="mt-3">{item.label}</h5>
-                <p className="text-muted small">{item.description}</p>
+        <div className="container">
+          <div className="row g-4 justify-content-center">
+            {options.map((item, index) => (
+              <div
+                key={index}
+                className="col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center"
+              >
+                <div
+                  className="card shadow-sm p-4 w-100 text-center"
+                  style={{ cursor: "pointer", transition: "0.3s" }}
+                  onClick={() => alert(`Clicked: ${item.label}`)}
+                >
+                  <div className="d-flex flex-column align-items-center">
+                    {item.icon}
+                    <h5 className="mt-3">{item.label}</h5>
+                    <p className="text-muted small">{item.description}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

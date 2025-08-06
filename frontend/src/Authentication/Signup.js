@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import axiosInstance from "../utils/axios.js"; // adjust path if needed\
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
+
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -10,13 +14,13 @@ function Signup() {
   });
 
   const handleChange = (e) => {
-    setFormData({ 
-      ...formData, 
-      [e.target.name]: e.target.value 
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
     });
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -24,17 +28,34 @@ function Signup() {
       return;
     }
 
-    // Send formData to backend API here
-    console.log("Signing up with:", formData);
+    try {
+      const { fullName, email, password } = formData;
+      const res = await axiosInstance.post("auth/signup", {
+        fullName,
+        email,
+        password,
+      });
+
+      console.log("Signup successful:", res.data);
+      // Optionally redirect or auto-login
+    } catch (error) {
+      console.error("Signup failed:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Signup failed.");
+    }
   };
 
   return (
     <div className="d-flex justify-content-center align-items-center align-content-center vh-100 bg-light">
-      <div className="card shadow" style={{ width: "100%", maxWidth: "400px", padding: '35px' }}>
+      <div
+        className="card shadow"
+        style={{ width: "100%", maxWidth: "400px", padding: "35px" }}
+      >
         <h3 className="text-center mb-4">Register</h3>
         <form onSubmit={handleSignup}>
           <div className="mb-3">
-            <label htmlFor="fullName" className="form-label">Full Name</label>
+            <label htmlFor="fullName" className="form-label">
+              Full Name
+            </label>
             <input
               type="text"
               className="form-control"
@@ -48,7 +69,9 @@ function Signup() {
           </div>
 
           <div className="mb-3">
-            <label htmlFor="email" className="form-label">Email Address</label>
+            <label htmlFor="email" className="form-label">
+              Email Address
+            </label>
             <input
               type="email"
               className="form-control"
@@ -62,7 +85,9 @@ function Signup() {
           </div>
 
           <div className="mb-3">
-            <label htmlFor="password" className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">
+              Password
+            </label>
             <input
               type="password"
               className="form-control"
@@ -76,7 +101,9 @@ function Signup() {
           </div>
 
           <div className="mb-3">
-            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="form-label">
+              Confirm Password
+            </label>
             <input
               type="password"
               className="form-control"
@@ -89,10 +116,18 @@ function Signup() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary w-100">Sign Up</button>
+          <button type="submit" className="btn btn-primary w-100">
+            Sign Up
+          </button>
 
           <div className="text-center mt-3">
-            <small>Already have an account? <a href="#">Login</a></small>
+            <small>
+              Already have an account?{" "}
+              <a href="#" onClick={() => navigate("/login")}>
+                Login
+              </a>
+              <br />
+            </small>
           </div>
         </form>
       </div>

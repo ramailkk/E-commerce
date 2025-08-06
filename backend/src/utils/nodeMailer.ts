@@ -1,16 +1,20 @@
 import nodemailer, { Transporter } from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
 
-// Define transporter with Mailtrap SMTP settings
+
+// Configure the transporter using environment variables
 const transporter: Transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
-  port: 2525,
+  host: process.env.MAIL_HOST,
+  port: parseInt(process.env.MAIL_PORT || "587"),
   auth: {
-    user: "73a6ab85b669df",
-    pass: "cbe0c721302a8a",
+    // dont forget to chnage name FROM USER-> USERNAME AND PASS-> PASSWORD
+    user: process.env.MAIL_USERNAME,
+    pass: process.env.MAIL_PASSWORD,
   },
 });
 
-// Define the function with proper TypeScript types
+// Send email utility
 export default async function sendEmail(
   to: string,
   subject: string,
@@ -18,16 +22,16 @@ export default async function sendEmail(
 ): Promise<boolean> {
   try {
     const mailOptions = {
-      from: "AUTH_SYSTEM@example.com",
+      from: process.env.MAIL_USERNAME,
       to,
       subject,
       text,
     };
 
     await transporter.sendMail(mailOptions);
-    return true; // Email sent successfully
+    return true;
   } catch (error) {
     console.error("Error sending email:", error);
-    return false; // Email sending failed
+    return false;
   }
 }

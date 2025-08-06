@@ -148,7 +148,8 @@ const forgotPassword = tryCatch(
 const verifyOtp = tryCatch(
   async (req: Request, res: Response): Promise<any> => {
     const { email, otp } = req.body;
-
+    console.log(email);
+    console.log(otp);
     if (!email || !otp) {
       return res
         .status(400)
@@ -161,11 +162,12 @@ const verifyOtp = tryCatch(
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (user.otp !== otp) {
+    if (String(user.otp) !== String(otp)) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
     res.status(200).json({
+      success: true,
       message: "Otp Confirmed!",
     });
   },
@@ -173,22 +175,18 @@ const verifyOtp = tryCatch(
 
 const resetPassword = tryCatch(
   async (req: Request, res: Response): Promise<any> => {
-    const { email, password, otp } = req.body;
+    const { email, password } = req.body;
+    console.log(email);
+    console.log(password);
 
-    if (!email || !password || !otp) {
+    if (!email || !password) {
       return res
         .status(400)
         .json({ message: "Please provide all required fields" });
     }
-
     const user: any = await User.findOne({ email });
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
-    }
-
-    if (user.otp !== otp) {
-      return res.status(401).json({ message: "Invalid OTP" });
     }
 
     user.otp = null;
@@ -196,6 +194,7 @@ const resetPassword = tryCatch(
     await user.save();
 
     res.status(200).json({
+      success: true,
       message: "Password Reset Successfully!",
     });
   },

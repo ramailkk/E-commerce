@@ -2,16 +2,20 @@ import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axiosInstance from "../utils/axios";
 import { useAuth } from "./AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const res = axiosInstance.post("auth/login", {email, password});
+      const res = await axiosInstance.post("auth/login", { email, password });
       login(res.data);
+      alert("Logged In congrats")
     } catch (error) {
       console.error("Error", error);
     }
@@ -26,7 +30,6 @@ const Login = () => {
         <h3 className="text-center mb-4">Login</h3>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            {/* <label htmlFor="email" className="form-label">Email address</label> */}
             <input
               type="email"
               className="form-control"
@@ -38,7 +41,6 @@ const Login = () => {
             />
           </div>
           <div className="mb-3">
-            {/* <label htmlFor="password" className="form-label">Password</label> */}
             <input
               type="password"
               className="form-control"
@@ -56,12 +58,17 @@ const Login = () => {
           </div>
           <div className="text-center mt-3">
             <small>
-              Forgot Password? <a href="#">Click here</a>
+              Forgot Password?{" "}
+              <a href="#" onClick={() => navigate("/forgot-password")}>
+                Click here
+              </a>
             </small>
           </div>
           <div className="text-center mt-3">
             <small>
-              Don't have an account? <a href="#">Register</a>
+              Don't have an account? <a href="#" onClick={() => navigate("/signup")}>
+                Register
+              </a>
             </small>
           </div>
         </form>

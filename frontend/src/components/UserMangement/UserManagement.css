@@ -1,0 +1,354 @@
+/* UserManagementTable.css */
+
+/* --- Main Layout & Container --- */
+.user-management-table__container {
+  padding: 50px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.user-management-table__wrapper {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  position: relative;
+}
+
+/* --- Header & Controls --- */
+.user-management-table__header {
+  background-color: white;
+  padding: 25px;
+  border-radius: 4px;
+  margin-bottom: 25px;
+  border: 1px solid #cccccc;
+}
+
+.user-management-table__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #212529;
+  margin-bottom: 8px;
+  text-align: center;
+  background: linear-gradient(135deg, #212529 0%, #495057 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.user-management-table__subtitle {
+
+  color: #6c757d;
+  font-size: 16px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.user-management-table__controls {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-management-table__search-input,
+.user-management-table__date-input,
+.user-management-table__filter-select {
+  padding: 10px 16px;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.user-management-table__search-input {
+  min-width: 250px;
+}
+.user-management-table__search-input:focus {
+  border-color: #80bdff;
+  /* box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); */
+}
+
+.user-management-table__filter-select {
+  background-color: white;
+  cursor: pointer;
+}
+
+/* --- Column Toggler --- */
+.user-management-table__column-toggle {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  align-items: center;
+}
+.user-management-table__column-toggle-label {
+  font-size: 12px;
+  color: #6c757d;
+  margin-right: 10px;
+}
+.user-management-table__column-toggle-button {
+  padding: 6px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.user-management-table__column-toggle-button--active {
+  background-color: #212529;
+  color: white;
+  border-color: #212529;
+}
+
+/* --- Table Styles --- */
+.user-management-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.user-management-table__head {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.user-management-table__header-cell {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+}
+
+.user-management-table__header-cell--sortable {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.user-management-table__header-cell--sortable:hover {
+  background-color: #e9ecef;
+}
+
+.user-management-table__sort-icon {
+  margin-left: 8px;
+  font-size: 10px;
+  color: #6c757d;
+}
+
+.user-management-table__body {
+  background-color: white;
+}
+
+.user-management-table__row {
+  border-bottom: 1px solid #f1f3f4;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.user-management-table__row:hover {
+  background-color: #d3d6da;
+  /* transform: translateY(-2px); */
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); */
+}
+
+.user-management-table__cell {
+  padding: 16px 20px;
+  color: #495057;
+  vertical-align: middle;
+}
+
+/* --- User Info & Avatar --- */
+.user-management-table__user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-management-table__user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  user-select: none;
+}
+
+.user-management-table__user-details {
+  display: flex;
+  flex-direction: column;
+}
+.user-management-table__user-name {
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 2px;
+}
+.user-management-table__user-email {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* --- Status Badges --- */
+.user-management-table__status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  width: 80px;
+  user-select: none;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.user-management-table__status-badge--active {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.user-management-table__status-badge--inactive {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+.user-management-table__status-badge--banned {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* --- Action Buttons --- */
+.user-management-table__action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.user-management-table__action-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-management-table__action-button--ban {
+  background-color: #dc3545;
+  color: white;
+}
+.user-management-table__action-button--ban:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+.user-management-table__action-button--unban {
+  background-color: #28a745;
+  color: white;
+}
+.user-management-table__action-button--unban:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+/* --- Loading & No Results --- */
+.user-management-table__no-results-cell {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-size: 16px;
+}
+
+.user-management-table__loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  gap: 10px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.user-management-table__spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border-left-color: #212529;
+  animation: user-management-table-spin 1s ease infinite;
+}
+
+@keyframes user-management-table-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Pagination --- */
+.user-management-table__pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 25px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.user-management-table__pagination-info {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.user-management-table__pagination-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.user-management-table__pagination-button {
+  padding: 8px 14px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.user-management-table__pagination-button:hover:not(:disabled) {
+  background-color: #e9ecef;
+  border-color: #b9bfc4;
+}
+.user-management-table__pagination-button--active {
+  background-color: #212529;
+  color: white;
+  border-color: #212529;
+}
+.user-management-table__pagination-button:disabled {
+  background-color: #f8f9fa;
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.user-management-table__pagination-dots {
+  padding: 8px;
+  color: #6c757d;
+  align-self: center;
+}
